@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: springFlix
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/app
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update

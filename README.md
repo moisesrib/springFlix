@@ -69,45 +69,80 @@ A chave do JWT pode ser trocada pela variável de ambiente `JWT_SECRET`. O token
 
 ## Estrutura de pastas
 
-Cada módulo tem uma pasta por camada: `controller`, `service`, `repository`, `entity` e `dto`. As validações ficam nos DTOs de entrada (`Request`). O módulo `auth` não tem entidade nem repository, porque usa os de `usuarios`.
+O código é dividido em módulos por funcionalidade (`filmes`, `categorias`, `perfis`, `avaliacoes`, `usuarios` e `auth`). Dentro de cada módulo há uma pasta por camada: `controller`, `service`, `repository`, `entity` e `dto`. O que é compartilhado entre os módulos fica em `core`.
+
+### Camadas
+
+Uma requisição sempre passa pelas camadas na mesma ordem: **Controller → Service → Repository → banco**. A resposta volta como DTO de saída.
+
+| Pasta | Responsabilidade | Anotações principais | Exemplo |
+|-------|------------------|----------------------|---------|
+| `controller` | Recebe a requisição HTTP, valida o DTO de entrada e devolve o DTO de saída. Não tem regra de negócio. | `@RestController`, `@RequestMapping`, `@GetMapping`, `@PostMapping`, `@Valid` | `FilmeController` |
+| `service` | Regras de negócio, transações e logs. Converte DTO em entidade e entidade em DTO. | `@Service`, `@Transactional`, `@Slf4j` | `FilmeService` |
+| `repository` | Acesso ao banco com Spring Data JPA. As consultas são geradas pelo nome do método (ex.: `findByTituloContainingIgnoreCase`). | interface que estende `JpaRepository` | `FilmeRepository` |
+| `entity` | Classes mapeadas para as tabelas do banco e os relacionamentos entre elas. | `@Entity`, `@Table`, `@ManyToOne`, `@ManyToMany` | `Filme` |
+| `dto` | Dados que entram (`Request`, com validações) e que saem (`Response`) da API. A entidade nunca é exposta diretamente. | `record`, `@NotBlank`, `@Email`, `@Size`, `@Min`, `@Max`, `@Pattern` | `FilmeRequest`, `FilmeResponse` |
+
+| Pasta do `core` | Responsabilidade |
+|-----------------|------------------|
+| `core/exception` | Exceções da aplicação e o `GlobalExceptionHandler` (`@RestControllerAdvice`), que transforma erros em JSON com status 400, 401 ou 404 |
+| `core/security` | `SecurityConfig` (rotas públicas, autenticadas e só ADMIN), `SecurityFilter` (lê o JWT de cada requisição) e `TokenService` (gera e valida o token) |
+| `core/config` | `OpenApiConfig`, configuração do Swagger com o botão Authorize |
+
+### Árvore completa
 
 ```
 src/main/java/com/spring/flix
-├── auth            login e cadastro público
-├── usuarios        CRUD de usuários (ADMIN)
-├── perfis          CRUD de perfis e "minha lista"
-├── filmes          CRUD do catálogo de filmes
-├── categorias      CRUD de categorias
-├── avaliacoes      CRUD de avaliações
+├── SpringFlixApplication.java
+├── auth                                 login e cadastro público
+│   ├── controller/AuthController.java
+│   ├── service/AuthService.java
+│   └── dto/LoginRequest.java, RegistroRequest.java, TokenResponse.java
+├── usuarios                             CRUD de usuários (ADMIN)
+│   ├── controller/UsuarioController.java
+│   ├── service/UsuarioService.java
+│   ├── repository/UsuarioRepository.java
+│   ├── entity/Usuario.java, Role.java
+│   └── dto/UsuarioRequest.java, UsuarioResponse.java
+├── perfis                               CRUD de perfis e "minha lista"
+│   ├── controller/PerfilController.java
+│   ├── service/PerfilService.java
+│   ├── repository/PerfilRepository.java
+│   ├── entity/Perfil.java
+│   └── dto/PerfilRequest.java, PerfilResponse.java
+├── filmes                               CRUD do catálogo de filmes
+│   ├── controller/FilmeController.java
+│   ├── service/FilmeService.java
+│   ├── repository/FilmeRepository.java
+│   ├── entity/Filme.java
+│   └── dto/FilmeRequest.java, FilmeResponse.java
+├── categorias                           CRUD de categorias
+│   ├── controller/CategoriaController.java
+│   ├── service/CategoriaService.java
+│   ├── repository/CategoriaRepository.java
+│   ├── entity/Categoria.java
+│   └── dto/CategoriaRequest.java, CategoriaResponse.java
+├── avaliacoes                           CRUD de avaliações
+│   ├── controller/AvaliacaoController.java
+│   ├── service/AvaliacaoService.java
+│   ├── repository/AvaliacaoRepository.java
+│   ├── entity/Avaliacao.java
+│   └── dto/AvaliacaoRequest.java, AvaliacaoResponse.java
 └── core
-    ├── config      configuração do Swagger/OpenAPI
-    ├── exception   exceções e tratamento global (@RestControllerAdvice)
-    └── security    Spring Security, filtro JWT e geração do token
+    ├── config/OpenApiConfig.java
+    ├── exception/GlobalExceptionHandler.java, ErroResponse.java,
+    │             RecursoNaoEncontradoException.java, RegraNegocioException.java
+    └── security/SecurityConfig.java, SecurityFilter.java, TokenService.java
 
 src/main/resources
 ├── application.yaml
 ├── db/migration
 │   ├── V1__criar_tabelas.sql
 │   └── V2__inserir_dados.sql
-└── static            frontend (index.html, css/style.css, js/app.js)
+└── static                               frontend (index.html, css/style.css, js/app.js)
 ```
 
-Exemplo do módulo `filmes`:
-
-```
-filmes
-├── controller
-│   └── FilmeController.java    endpoints REST
-├── service
-│   └── FilmeService.java       regras de negócio
-├── repository
-│   └── FilmeRepository.java    acesso ao banco (Spring Data JPA)
-├── entity
-│   └── Filme.java              entidade JPA
-└── dto
-    ├── FilmeRequest.java       DTO de entrada com validações
-    └── FilmeResponse.java      DTO de saída
-```
+O módulo `auth` não tem `entity` nem `repository`, porque usa os de `usuarios`.
 
 ## Modelo de dados (DER)
 

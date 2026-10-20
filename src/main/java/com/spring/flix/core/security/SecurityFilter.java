@@ -1,6 +1,6 @@
 package com.spring.flix.core.security;
 
-import com.spring.flix.usuarios.UsuarioRepository;
+import com.spring.flix.usuarios.repository.UsuarioRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

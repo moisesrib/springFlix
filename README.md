@@ -69,7 +69,7 @@ A chave do JWT pode ser trocada pela variável de ambiente `JWT_SECRET`. O token
 
 ## Estrutura de pastas
 
-Cada módulo tem as suas camadas: Entity, Repository, Service, Controller e os DTOs de entrada (`Request`) e saída (`Response`). As validações ficam nos DTOs de entrada.
+Cada módulo tem uma pasta por camada: `controller`, `service`, `repository`, `entity` e `dto`. As validações ficam nos DTOs de entrada (`Request`). O módulo `auth` não tem entidade nem repository, porque usa os de `usuarios`.
 
 ```
 src/main/java/com/spring/flix
@@ -96,12 +96,17 @@ Exemplo do módulo `filmes`:
 
 ```
 filmes
-├── Filme.java              entidade JPA
-├── FilmeRepository.java    acesso ao banco (Spring Data JPA)
-├── FilmeService.java       regras de negócio
-├── FilmeController.java    endpoints REST
-├── FilmeRequest.java       DTO de entrada com validações
-└── FilmeResponse.java      DTO de saída
+├── controller
+│   └── FilmeController.java    endpoints REST
+├── service
+│   └── FilmeService.java       regras de negócio
+├── repository
+│   └── FilmeRepository.java    acesso ao banco (Spring Data JPA)
+├── entity
+│   └── Filme.java              entidade JPA
+└── dto
+    ├── FilmeRequest.java       DTO de entrada com validações
+    └── FilmeResponse.java      DTO de saída
 ```
 
 ## Modelo de dados (DER)

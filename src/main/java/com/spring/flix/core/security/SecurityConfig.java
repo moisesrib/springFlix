@@ -1,6 +1,6 @@
 package com.spring.flix.core.security;
 
-import com.spring.flix.usuarios.UsuarioRepository;
+import com.spring.flix.usuarios.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -470,6 +470,38 @@ Resposta `201 Created`:
 
 Avaliar o mesmo filme de novo com o mesmo perfil retorna `400` com a mensagem `"Este perfil já avaliou este filme"`.
 
+## Inteligência artificial (LangChain4j)
+
+O módulo `ia` usa o [LangChain4j](https://docs.langchain4j.dev/) com a API da OpenAI para duas funções:
+
+| Método | Rota | Acesso | Descrição |
+|--------|------|--------|-----------|
+| GET | `/ia/status` | Autenticado | Mostra se a IA está configurada ou em modo simulado |
+| GET | `/ia/sugestoes?perfilId=` | Dono | Sugere até 5 filmes com base na "minha lista" e nas avaliações do perfil |
+| GET | `/ia/pesquisa?q=` | Autenticado | Pesquisa em linguagem natural (ex.: `filme brasileiro de crime`) |
+
+No frontend, a tela Início ganhou a fileira **Sugeridos para você** e o campo **Pesquisa com IA**.
+
+### Configurando a chave
+
+1. Crie uma chave em https://platform.openai.com/api-keys.
+2. Defina a variável de ambiente `OPENAI_API_KEY`:
+   - Docker: copie `.env.example` para `.env` e preencha a chave (o `.env` está no `.gitignore`).
+   - IDE/terminal (PowerShell): `$env:OPENAI_API_KEY="sk-..."` antes do `gradlew.bat bootRun`.
+3. Opcional: `OPENAI_MODEL` (padrão `gpt-4o-mini`) e `OPENAI_BASE_URL` (para Ollama: `http://localhost:11434/v1` com `OPENAI_MODEL=llama3`).
+
+Sem a chave, ou se a OpenAI recusar a chamada (ex.: `429 quota exceeded`), as rotas continuam funcionando em **modo simulado**: a sugestão usa as categorias que o perfil mais curte e a pesquisa procura as palavras no título, diretor, categorias e sinopse. O campo `modo` da resposta indica `ia` ou `simulado`.
+
+| Arquivo | Papel |
+|---------|-------|
+| `ia/config/IaConfig.java` | Cria o `ChatModel` (`OpenAiChatModel`) só quando há chave |
+| `ia/service/IaService.java` | Lê o template em `resources/prompts`, aplica as variáveis e chama o modelo |
+| `ia/service/FilmeIaService.java` | Regras de sugestão e pesquisa, validação dos ids devolvidos e modo simulado |
+| `ia/controller/IaController.java` | Rotas `/ia/*` |
+| `resources/prompts/*.st` | Templates dos prompts (`sugerir-filmes.st`, `pesquisar-filmes.st`) |
+
+A IA só pode devolver ids de filmes que existem no catálogo; ids inventados são descartados.
+
 ## Tratamento de erros
 
 Todos os erros tratados pelo `GlobalExceptionHandler` seguem o mesmo formato:

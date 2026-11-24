@@ -12,6 +12,8 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
 
     List<Avaliacao> findByFilmeIdOrderByDataAvaliacaoDesc(Long filmeId);
 
+    List<Avaliacao> findByPerfilId(Long perfilId);
+
     Optional<Avaliacao> findByPerfilIdAndFilmeId(Long perfilId, Long filmeId);
 
     Optional<Avaliacao> findByIdAndPerfilUsuarioId(Long id, Long usuarioId);

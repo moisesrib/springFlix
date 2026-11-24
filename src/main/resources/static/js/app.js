@@ -10,7 +10,9 @@ const estado = {
     abaAdmin: 'filmes',
     busca: '',
     categoriaId: null,
-    modoCadastro: false
+    modoCadastro: false,
+    sugestoes: null,
+    pesquisaIa: null
 };
 
 const CLASSIFICACOES = ['L', '10', '12', '14', '16', '18'];
@@ -244,6 +246,37 @@ async function carregarCatalogo() {
         api('GET', `/filmes?titulo=${encodeURIComponent(estado.busca)}`),
         api('GET', '/categorias')
     ]);
+    estado.sugestoes = await api('GET', `/ia/sugestoes?perfilId=${estado.perfil.id}`).catch(() => null);
+}
+
+function seloIa(resposta) {
+    return `<span class="selo-ia">${resposta.modo === 'ia' ? '✨ IA' : 'modo simulado'}</span>`;
+}
+
+function blocoPesquisaIa() {
+    const r = estado.pesquisaIa;
+    if (!r) return '';
+    return `
+    <section class="resultado-ia">
+        <h3>Resultado da pesquisa com IA ${seloIa(r)} <button class="botao link" onclick="limparPesquisaIa()">Limpar</button></h3>
+        <p class="ia-explicacao">${esc(r.explicacao)}</p>
+        ${r.filmes.length ? `<div class="grade">${r.filmes.map(cartao).join('')}</div>` : ''}
+    </section>`;
+}
+
+function pesquisarComIa(evento) {
+    evento.preventDefault();
+    const pergunta = new FormData(evento.target).get('pergunta').trim();
+    if (!pergunta) return;
+    executar(async () => {
+        estado.pesquisaIa = await api('GET', `/ia/pesquisa?q=${encodeURIComponent(pergunta)}`);
+        render();
+    });
+}
+
+function limparPesquisaIa() {
+    estado.pesquisaIa = null;
+    render();
 }
 
 function cabecalho() {
@@ -268,7 +301,14 @@ function cabecalho() {
 function telaCatalogo() {
     return `
     <div class="filtros">
-        <input class="busca" placeholder="Buscar por título" value="${esc(estado.busca)}" oninput="buscar(this.value)">
+        <div class="linha-busca">
+            <input class="busca" placeholder="Buscar por título" value="${esc(estado.busca)}" oninput="buscar(this.value)">
+            <form class="form-ia" onsubmit="pesquisarComIa(event)">
+                <input name="pergunta" placeholder="Pesquisa com IA: ex. filme brasileiro de crime">
+                <button class="botao primario">Pesquisar</button>
+            </form>
+        </div>
+        ${blocoPesquisaIa()}
         <div class="chips">
             <button class="chip ${estado.categoriaId ? '' : 'ativo'}" onclick="filtrarCategoria(null)">Todas</button>
             ${estado.categorias.map(c => `<button class="chip ${estado.categoriaId === c.id ? 'ativo' : ''}" onclick="filtrarCategoria(${c.id})">${esc(c.nome)}</button>`).join('')}
@@ -282,7 +322,14 @@ function vitrine() {
     if (estado.categoriaId) filmes = filmes.filter(f => f.categorias.some(c => c.id === estado.categoriaId));
     if (!filmes.length) return '<p class="vazio">Nenhum filme encontrado.</p>';
     if (estado.busca || estado.categoriaId) return `<div class="grade">${filmes.map(cartao).join('')}</div>`;
-    return estado.categorias.map(categoria => {
+    const s = estado.sugestoes;
+    const sugeridos = s && s.filmes.length ? `
+        <section class="fileira">
+            <h3>Sugeridos para você ${seloIa(s)}</h3>
+            <p class="ia-explicacao">${esc(s.explicacao)}</p>
+            <div class="trilho">${s.filmes.map(cartao).join('')}</div>
+        </section>` : '';
+    return sugeridos + estado.categorias.map(categoria => {
         const daCategoria = filmes.filter(f => f.categorias.some(c => c.id === categoria.id));
         if (!daCategoria.length) return '';
         return `<section class="fileira"><h3>${esc(categoria.nome)}</h3><div class="trilho">${daCategoria.map(cartao).join('')}</div></section>`;

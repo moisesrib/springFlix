@@ -27,8 +27,6 @@ jwt:
   secret: ${JWT_SECRET:springflix-segredo-desenvolvimento}
   expiration-hours: 2
 
-# IA com LangChain4j + OpenAI. Sem OPENAI_API_KEY a API responde em modo simulado.
-# Para usar Ollama: OPENAI_BASE_URL=http://localhost:11434/v1 e OPENAI_MODEL=llama3
 ia:
   openai:
     api-key: ${OPENAI_API_KEY:}

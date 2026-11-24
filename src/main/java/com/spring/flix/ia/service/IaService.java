@@ -14,10 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Ponto único de acesso ao modelo de linguagem. Monta o prompt a partir de um
- * template em resources/prompts e envia para o ChatModel, se ele estiver configurado.
- */
 @Slf4j
 @Service
 public class IaService {
@@ -39,10 +35,6 @@ public class IaService {
         return habilitada() ? modelName : "simulado";
     }
 
-    /**
-     * Executa o template e devolve a resposta do modelo. Retorna vazio quando a IA
-     * não está configurada ou quando a chamada falha (sem crédito, timeout etc.).
-     */
     public Optional<String> executar(String template, Map<String, Object> variaveis) {
         ChatModel model = chatModelProvider.getIfAvailable();
         if (model == null) {

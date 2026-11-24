@@ -10,11 +10,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
-/**
- * Cria o cliente do modelo de linguagem (LangChain4j + OpenAI).
- * O bean só existe quando a variável OPENAI_API_KEY está preenchida; sem ela
- * os serviços de IA respondem em modo simulado.
- */
 @Slf4j
 @Configuration
 public class IaConfig {

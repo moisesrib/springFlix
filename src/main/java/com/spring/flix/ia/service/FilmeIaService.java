@@ -31,11 +31,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * Sugestão de filmes por perfil e pesquisa em linguagem natural.
- * Usa a IA quando ela está configurada; caso contrário (ou se a IA falhar),
- * resolve com um algoritmo local para a aplicação continuar funcionando.
- */
 @Slf4j
 @Service
 @Transactional(readOnly = true)
@@ -62,8 +57,6 @@ public class FilmeIaService {
     private final AvaliacaoRepository avaliacaoRepository;
     private final PerfilService perfilService;
     private final IaService iaService;
-
-    // ------------------------------------------------------------------ sugestão
 
     public IaResponse sugerir(Long perfilId, Usuario usuario) {
         Perfil perfil = perfilService.buscarDoUsuario(perfilId, usuario);
@@ -100,7 +93,6 @@ public class FilmeIaService {
     }
 
     private IaResponse sugerirLocalmente(Perfil perfil, List<Avaliacao> avaliacoes, List<Filme> candidatos) {
-        // Peso de cada categoria conforme o histórico do perfil
         Map<String, Integer> pesos = new HashMap<>();
         perfil.getMinhaLista().forEach(f -> somarCategorias(pesos, f, 2));
         avaliacoes.forEach(a -> somarCategorias(pesos, a.getFilme(), a.getNota() >= 4 ? a.getNota() : a.getNota() <= 2 ? -2 : 0));
@@ -124,8 +116,6 @@ public class FilmeIaService {
                 : "Sugestões baseadas nas categorias que este perfil mais curte: " + String.join(", ", favoritas) + ".";
         return new IaResponse(modo(false), explicacao, sugeridos.stream().map(FilmeResponse::from).toList());
     }
-
-    // ------------------------------------------------------------------ pesquisa
 
     public IaResponse pesquisar(String pergunta) {
         if (pergunta == null || pergunta.isBlank()) {
@@ -193,12 +183,6 @@ public class FilmeIaService {
         return pontos;
     }
 
-    // ------------------------------------------------------------------ apoio
-
-    /**
-     * Lê a resposta no formato "IDS: 1, 2\nEXPLICACAO: ..." e mantém só ids que existem
-     * entre os candidatos, para a IA nunca inventar filmes.
-     */
     private Optional<IaResponse> interpretar(String texto, List<Filme> candidatos, int limite) {
         Matcher ids = IDS.matcher(texto);
         if (!ids.find()) {
